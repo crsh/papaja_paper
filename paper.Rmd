@@ -1,0 +1,1359 @@
+---
+title             : "papaja: Prepare Computationally Reproducible APA Journal Articles with R Markdown"
+shorttitle        : "papaja"
+
+author: 
+  - name          : "Frederik Aust"
+    affiliation   : ""
+    corresponding : yes    # Define only one corresponding author
+    address       : "Herbert-Lewin-Str. 2, 50931 Cologne, Germany"
+    email         : "frederik.aust@uni-koeln.de"
+  - name          : "Marius Barth"
+    affiliation   : ""
+
+affiliation:
+  - id            : ""
+    institution   : "University of Cologne"
+
+note: |
+  This manuscript is an early draft published primarily to elicit feedback and
+  obtain a DOI that can be used to cite and thus credit papaja in published
+  articles.
+
+authornote: |
+  Frederik Aust and Marius Barth, Department Psychology, University of Cologne,
+  Germany.
+  
+  We thank everyone who contributed to the development of papaja by suggesting
+  enhancements, reporting bugs, and asking questions.
+
+abstract: |
+  Computational reproduciblity is the ability to reproduce the results of a
+  analytic or computational procedure when given the same input data (and analysis
+  scripts).
+  Recent research has demonstrated empirically that, given the original data,
+  results in scientific reports from a variety of disciplines are often difficult
+  and sometimes impossible to reproduce.
+  Baring in mind that computational reproducibility is a basic requirement for
+  intersubjective verifiability it must be considered a minimum requirement to
+  consider scientific claims.
+  The difficulty to reproduce results in peer-reviewed scientific journal articles,
+  therefore, highlight a serious problem with the widespread copy-and-paste approach
+  to scientific reporting.
+  We argue that dynamic documents are a more reliable approach to authoring scientific 
+  reports:
+  By fusing manuscript and analysis scripts dynamic documents help to ensure the
+  computational reporducibility of reported results.
+  We furthermore introduce the R package papaja that is designed to author APA-style
+  manuscripts in R Markdown and facilitates the standardized reporting of analyses
+  common in psychological research.
+  
+  
+keywords          : "computational reproducibility, method robustness, repeatability, dynamic documents"
+wordcount         : ""
+
+bibliography      : ["references.bib", "r-references.bib"]
+
+floatsintext      : yes
+figurelist        : no
+tablelist         : no
+footnotelist      : no
+linenumbers       : yes
+mask              : no
+draft             : no
+
+documentclass     : "apa6"
+classoption       : "man"
+output            : papaja::apa6_pdf
+---
+
+```{r setup, include = FALSE}
+library("knitr")
+library("papaja")
+
+library("DiagrammeR")
+library("DiagrammeRsvg")
+library("rsvg")
+
+library("ggplot2")
+
+library("dplyr")
+
+library("afex")
+```
+
+```{r analysis-preferences}
+# # Seed for random number generation
+# set.seed(42)
+# knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
+# 
+# # Caching preferences
+# knitr::opts_chunk$set(autodep = TRUE, cache.comments = FALSE)
+# knitr::dep_auto()
+```
+
+
+The dominant approach to writing scientific reports in psychology is the use of common word processors such as Microsoft Word or Libre Office.
+To implement the commonly requested APA manuscript style[^apa-style], authors may use document templates set up page margins, line spacing, fonts, and related aspects of the manuscript.
+The format of citations and references can be automated by using references managers that integrate with the word processor.
+These forms of automation facilitate the implementation of APA style and reduce the likelihood of formatting errors.
+In contrast to manuscript styling, reporting of results is typically not automated.
+Results of analyses are copied from the output of the analysis software and pasted into the word processor.
+We will, therefore, refer to this as _copy-and-paste reporting_.
+Error-free reporting of results is arguably more important for a cummulative science than the manuscript style.
+Nonetheless, copy-and-paste reporting employs fault-preventing autmation only to ensure correct manuscript styling but not to ensure correct reporting or results.
+
+[^apa-style]: APA style is one of the major style regimes in academia concerned with written scientific communication and is defined in the _Publication Manual of the American Psychological Association_ [APA; @american_psychological_association_publication_2010].
+Research in psychology and many fields other, including other social sciences, medicine, and public health is reported in APA style.
+
+Recent research has demonstrated empirically that, given the original data, results in scientific reports from a variety of disciplines are often difficult and sometimes impossible to reproduce [citations needed].
+This nonreproducability of results in peer-reviewed scientific journal articles indicates a serious problem with copy-and-paste reporting.
+In the following, we argue that dynamic documents are a less error-prone approach to authoring scientific reports:
+By fusing manuscript and analysis scripts dynamic documents help to ensure the computational reporducibility of reported results.
+We introduce the R package `papaja` that is designed to author APA-style manuscripts in R Markdown and facilitates the standardized reporting of analyses common in psychological research.
+
+# Computation reproducibility
+
+...
+
+Thus, the term reproducibility here means that given a dataset and analysis script any analyst obtains the same statistical results [@asendorpf_recommendations_2013; @cacioppo_social_2015].
+
+The importance of reproducibility was pinpointed by the U.S. National Science Foundation subcommittee on replicability in science:
+
+> Reproducibility is a minimum necessary condition for a finding to be believable and informative. [p. 4, @cacioppo_social_2015]
+
+> Good statistical practice is fundamentally based on transparent assumptions, reproducible results, and valid interpretations.
+
+> The ethical statistician [...] strives to promote transparency in design, execution, and reporting or presenting of all analyses
+
+> Makes documentation suitable for replicate analyses, metadata studies, and other research by qualified investigators.
+
+http://www.amstat.org/asa/files/pdfs/EthicalGuidelines.pdf
+
+
+“an article about a computational result is advertising, not scholarship. The actual scholarship is the full software environment, code and data, that produced the result.”  - Buckheit & Donoho, 1995
+
+
+(Elsevier executable paper challenge: 10.1016/j.procs.2011.04.064)
+
+Donoho, D. L., Maleki, A., Rahman, I. U., Shahram, M. & Stodden, V. Reproducible
+research in computational harmonic analysis. Comput. Sci. Eng. 11, 8–18 (2009).
+Donoho and fellow researchers have been at the forefront of reproducibility for
+many years; this a
+
+
+
+1. Generalizability (e.g., Baribault et al., 2017; Brandt et al., 2014)
+2. Replicability (e.g., Open Science Collaboration, 2015; Simons, 2014)
+3. Analytical robustness (e.g., Silberzahn et al., 2017; Simonsohn, Simmons, & Nelson, 2015; Steegen, Tuerlinckx, Gelman, & Vanpaemel, 2016)
+4. Computational reproducibility (e.g., Peng, 2011; Rokem, Marwick, & Staneva, 2017; Stodden, 2015)
+
+<small>But see, for example, Plesser (2018)</small>
+
+
+U.S. National Science Foundation (NSF) subcommittee on replicability in science:
+
+> [Computational] Reproducibility is a .highlight[minimum necessary condition for a finding to be believable and informative]. (p. 4, Cacioppo, Kaplan, Krosnick, Olds, & Dean, 2015)
+
+&nbsp;
+
+> It is .highlight[scientifically and ethically imperative] that the results of statistical analysis […] be computationally reproducible (p. 138, Liu & Pounds, 2014)
+
+
+# Prevalence of computational nonreproducibility
+
+<!-- statcheck estimates may be somewhat inaccurate (e.g., Schmidt, 2016) -->
+
+<!-- - Corrections for multiple comparisons -->
+<!-- - Sphericity corrections -->
+<!-- - Misinterpretation of reported statistics<br />(e.g., bootstrap $p$-values) -->
+<!-- - One-tailed test in "wrong" direction -->
+<!-- - Misses some reported results (e.g., tables) -->
+<!-- - Many undetectable sources of errors -->
+
+<!-- *The problem may even be underestimated!* -->
+
+<!-- Granularity-Related Inconsistency of Means<br />(GRIM, Brown & Heathers, 2016) -->
+
+<!-- - Descriptives of integer data cannot take arbitrary values -->
+<!-- - 50% of tested articles contained at least one inconsistency -->
+<!-- <!-- - Many inconsistencies arose from incorrectly reported _n_ --> -->
+
+<!-- >  descriptives had been calculated using a Microsoft Excel formula that included an incorrect selection of cells; for example, this resulted in the .highlight[mean and SD of the first experimental condition being included as data points] in the calculation of the mean and SD (p. 4, Brown & Heathers, 2016) -->
+
+<!-- Errors in single-mediator models regression analyses (Petrocelli, Clarkson, Whitmire, & Moon, 2013) -->
+
+<!-- > More than 24% of the 156 models coded failed an equivalence test (i.e., $ab = c – c'$) -->
+
+
+<!-- _Computational reproducibility is hard!_ -->
+
+<!-- -- -->
+
+<!-- _Quarterly Journal of Political Science_ requires "replication packages" (data and analysis code) upon submission -->
+
+<!-- > 14 of the 24 empirical papers subject to in-house review were found to have discrepancies between the results generated by authors’ own code and those in their written manuscripts. […] .highlight[13 had code that would not execute without errors, eight failed to include code for results] that appeared in the paper (pp. 273-274, Eubank, 2016) -->
+
+<!-- Similar rates have been found in economics journals -->
+
+<!-- > [using] the author-provided data and code files to produce the key qualitative conclusions […] .highlight[we were able to replicate less than half of the papers] [...] .highlight[even with help from the authors] (Chang & Li, 2018) -->
+
+<!-- -- -->
+
+<!-- and in _Science_ publications -->
+
+<!-- > we were able to obtain artifacts from 44% of our sample and were able to .highlight[reproduce the findings for 26%] (Stodden, Seiler, & Ma, 2018). -->
+
+
+<!-- - wastes resources -->
+
+<!-- > there may have been an .highlight[error in the statistics reported] in the original article […] the .highlight[standard deviations] reported in a similar study (Srull & Wyer, 1980) were .highlight[approximately 6 times as large] (McCarthy et al., in press; multilab replication, $N = 7,373;~k = 22$ labs) -->
+
+
+<!-- > _Psychological Science_ uses StatCheck […] on manuscripts that are sent out for extended review -->
+
+
+# Reproducible scientific reports
+
+Dynamic scientific reports fuse prose and simulation or analysis scripts [@R-knitr; @gandrud_reproducible_2013].
+Each time a dynamic document is compiled, the scripts are executed anew and the results---statistics, tables, and figures---are recreated and inserted into the document.
+Thereby dynamic documents allow automated reporting of results, which is currently not possible with the prevalent use of Microsoft Word or Libre Office.
+Importantly, dynamic documents ensure that the results reported in the manuscript are free of rounding or transcription errors and correspond to the performed analyses.
+This is the reason why dynamic scientific reports are commonly referred to as reproducible scientific reports or reproducible reports.
+
+
+
+<!-- Computational reproducibility -->
+
+
+<!-- - requires precise knowledge of the analytical procedure -->
+<!-- - is facilitated by sharing data, analysis scripts, and documentation -->
+<!--     - Little appreciated extra work -->
+<!--     - Ideally documentation should be a natural by-product -->
+
+<!-- -- -->
+
+<!-- > Your closest collaborator is you six months ago, but you don’t reply to emails. -->
+
+<!-- > &mdash; Paul Wilson, University of Wisconsin Madison -->
+
+
+
+<!-- A partial solution to the challenge of computational reproducibilty -->
+
+<!-- - Derived from the concept of literate programming<br />(Knuth, 1992) -->
+<!-- - Fuse computer code and documentation -->
+<!--     - Fully documented analysis protocols -->
+<!--     - Results are embedded directly into the document -->
+
+
+<!-- A _partial_ solution to the challenge of computational reproducibilty -->
+
+<!-- - Same data, same code, same results -->
+<!--     - Prevents transcription errors -->
+<!--     - Ensures that statistics, tables, and figures represent the current analytical approach -->
+<!-- - Facilitates sharing "replication packages" (Eubank, 2016) -->
+<!-- - Increases scientific transparency -->
+<!-- - _Cannot guarantee that reported results are correct!_ -->
+
+<!-- ### [Error in one line of code sinks cancer study](http://retractionwatch.com/2016/09/26/error-in-one-line-of-code-sinks-2016-seer-cancer-study/) -->
+
+<!-- > the authors discovered an error in one line of code in the computer program used to calculate the results […]. Specifically, the error assigned the code “unknown” to the additional variables […] the breast cancer death rate ratio […] was given in the original Table 3 as 1.32 (95% CI, 1.28 to 1.36), but in the corrected version it is now 0.89 (95% CI, 0.86 to 0.93) […]. -->
+
+
+<!-- ### [Boys will be boys: Data error prompts U-turn on study of sex differences in school](http://retractionwatch.com/2017/10/17/boys-will-boys-data-error-prompts-u-turn-study-sex-differences-school/) -->
+
+<!-- > a major error forced the authors to change the title of their paper from “Boys have caught up” to “Boys have not caught up” -->
+
+<!-- The authors discovered that -->
+
+<!-- > there had been a .highlight[systematic coding error during data entry] (the 0/1 coding for “boy” and “girl” that we had on the paper questionnaires was opposite to the one in the SPSS labels). -->
+
+
+
+<!-- Wide range of available packages for different languages and output formats -->
+
+<!-- - `Sweave` -->
+<!-- - [`rmarkdown`](https://rmarkdown.rstudio.com/) / [`knitr`](https://yihui.name/knitr/) -->
+<!-- - [StatTag](http://sites.northwestern.edu/stattag/) -->
+<!-- - [Jupyter](http://jupyter.org/) -->
+<!-- - [`org-mode`](http://orgmode.org/) -->
+<!-- - ... -->
+
+
+<!-- `rmarkdown` / `knitr` -->
+
+<!-- - Wide support in the R community -->
+<!-- - Well integrated with RStudio -->
+<!-- - Supports multiple output formats<br />(e.g., HTML, PDF, Microsoft Word) -->
+<!-- - Flexible and user friendly -->
+
+
+<!-- org-mode: http://www.sciencedirect.com/science/article/pii/S0928425711000374?via%3Dihub -->
+<!-- http://yuyang0.github.io/static/doc/babel.pdf -->
+
+<!-- Proprietary software also exists like Inference for R29 – for using R with Microsoft Office – but we do not have any experience with them. Open-source tools like Dexy30 and Sumatra31 are clearly very promising and have capabilities similar to Sweave and org-mode.  -->
+
+
+
+<!--
+
+http://www.ncbi.nlm.nih.gov/pubmed/24886202
+Bakker, M. & Wicherts, J. M. (2011). The (mis)reporting of statistical results in psychology journals. Behavior Research Methods, 43, 666-678.
+	"18% of statistical results in the psychological literature are incorrectly reported [...]  around 15% of the articles contained at least one statistical conclusion that proved, upon recalculation, to be incorrect"
+
+The Prevalence of Statistical Reporting Errors in Psychology (1985-2013)
+https://osf.io/e9qbp/
+
+Study: 31 emailed requests for data to replicate SEMs yield 4 positive answers (87% non-reps)
+http://t.co/gClUQgoKtL http://t.co/88l0eUJIbf
+
+Statistical Reporting Errors and Collaboration on Statistical Analyses in Psychological Science
+http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0114876
+
+
+49% of econ paper results were successfully reproduced with original data and code, and help from original authors: http://t.co/13UUbwaD8x
+
+
+Of the subset of articles that were amenable to testing with the GRIM technique (N = 71), around half (N = 36; 50.7%) appeared to contain at least one reported mean inconsistent with the reported sample sizes and scale characteristics, and more than 20% (N = 16) contained multiple such inconsistencies. We requested the data sets corresponding to 21 of these articles, receiving positive responses in 9 cases. We were able to confirm the presence of at least one reporting error in all cases, with 2 articles requiring extensive corrections.
+https://peerj.com/preprints/2064/
+
+
+
+http://www.plosmedicine.org/article/info:doi/10.1371/journal.pmed.1001747
+http://biostatistics.oxfordjournals.org/content/11/3/385.full
+http://www.r-bloggers.com/translate2r-migrate-spss-scripts-to-r-at-the-push-of-a-button/
+
+http://osc.centerforopenscience.org/2014/10/30/reproducible-reporting/
+
+
+Fanelli D (2013) Only reporting guidelines can save (soft) science. European Journal of Personality 27(2): 124
+	"Good research practices notwithstanding, therefore, the keys to good science are good reporting practices, which, interestingly, are much easier to ensure. Indeed, reporting guidelines are rapidly being adopted in biomedical and clinical research, where initiatives such as the EQUATOR Network (http://www.equator-network.org) and Minimum Information about a Biomedical or Biological Investigation (http://mibbi.sourceforge.net) publish updated lists of details that authors need to provide, depending on what methodology they used. Major journals have adopted these guidelines spontaneously because doing so improves their reputation. If authors do not comply, their papers are rejected."
+
+
+More references: http://de.scribd.com/doc/71234390/The-Joy-of-Sweave-A-Beginner-s-Guide-to-Reproducible-Research-with-Sweave
+
+
+The first article about #APAStyle was published in the Feb 1929 issue of Psychological Bulletin! #TBT @apa_journals http://t.co/1e5CMBqfv8
+
+Willingness to Share Research Data Is Related to the Strength of the Evidence and the Quality of Reporting of Statistical Results
+http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0026828
+
+
+Sharing Detailed Research Data Is Associated with Increased Citation Rate
+http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0000308
+
+
+
+A first complication is conceptual, because arguably little benefit accrues if another researcher simply clicks “go” or “run” and produces the same numbers from the same data and source code as a previous researcher. Arguably, more would be gained by an independent re-analysis, whereby the second analyst seeks to reproduce the reported results from the raw data and without being guided (and potentially misled) by the first analyst’s code. However, should a second independent analysis yield incompatible results, then access to the original source code can help resolve those discrepancies.
+
+But this is where the second complication arises: the technicalities of sharing source code are also non-trivial. There are obstacles that arise from the use of different platforms (Windows vs. Mac vs. Linux), or from issues such as missing external libraries or tacit assumptions about local directory structures. Ideally, therefore, the source code and data should be prepared in a manner that avoids such pernickety and annoying glitches.
+
+http://www.psychonomic.org/featured-content-detail/go-check-ts-6b6-27c-transparent-workflow-tools-sci
+
+
+
+
+Researchers from the United States Federal Reserve and the Department of the Treasury tried to replicate the results from 67 papers across 13 prestigious journals, but even after contacting authors when necessary, they were successful in only 49 per cent of cases where the data were not confidential and the researchers had the right software to analyse it.
+
+the main reason for being unable to replicate findings was an inability to find the right data or the computer code that produced the original results, even after contacting the authors. Code was missing crucial functions, or certain variables were absent from the data, the paper says.
+
+However, in nine cases for which the authors of the paper had the right dataset and code, they nonetheless got a different result or the code failed to finish executing
+
+Is Economics Research Replicable? Sixty Published Papers fromThirteen Journals Say ”Usually Not”
+http://www.federalreserve.gov/econresdata/feds/2015/files/2015083pap.pdf
+http://theconversation.com/the-replication-crisis-has-engulfed-economics-49202
+
+
+It finds that of the 24 empirical papers subjected to in-house replication review since September 2012, only four packages did not require any modifications. Most troubling, 14 packages (58%) had results in the paper that differed from those generated by the author’s own code.
+http://journals.cambridge.org/action/displayAbstract?fromPage=online&aid=10269209&fileId=S1049096516000196
+
+
+
+Beyond Bar and Line Graphs: Time for a New Data Presentation Paradigm
+http://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.1002128
+
+
+Peer review openness initiative: http://opennessinitiative.org/PRO_Initiative_RSOS.pdf
+
+
+# Alternatives
+- Sweave: http://link.springer.com/chapter/10.1007/978-3-642-57489-4_89
+	-> Example of irreproducible research: http://www.nature.com/nm/journal/v13/n11/full/nm1107-1276b.html
+- RepoRts
+
+- Matlab-tool for reproducible analyses: http://link.springer.com/article/10.3758%2Fs13428-015-0616-x
+
+- kmr
+- statTag: http://sites.northwestern.edu/stattag/
+- StatWeave: http://homepage.divms.uiowa.edu/~rlenth/StatWeave/StatWeave-manual.pdf
+
+-->
+
+
+### Document compilation
+
+<!-- Far less common in psychology, is the use of markup systems, such as [LaTeX](https://en.wikipedia.org/wiki/LaTeX) or [Markdown](https://en.wikipedia.org/wiki/Markdown). -->
+<!-- A key concept of markup systems is to separate style from content by means of document annotations. -->
+<!-- These annotations declare portions of text for example as title, section headings, or list items but, crucially, they are agnostic to what this means visually (e.g., `*text*` instead of *text*). -->
+<!-- There are several advantages to this approach but, crucially for the present purpose, markup systems compile plain text files to produce the final document. -->
+<!-- Critically, the compilation process is required for fully reproducible scientific reports. -->
+
+
+It is important to note that `papaja` builds on several existing R packages, which in turn build on other software, to compile the final document.
+This layered software design grants the package its capabilities but it comes at a cost:
+When compilation of a `papaja`-document throws an error it may not be immediately obvious to an inexperienced user, which part of the process failed.
+We, thus, provide an overview of the compilation process and the software involved.
+
+As detailed in the [R Markdown components] section, an R Markdown document consists of three components:
+A YAML front matter that contains document meta data, prose written in markdown (and optionally LaTeX) syntax, and R code in so-called *code chunks*.
+
+Additionally, the R code contained in an R Markdown document usually accesses data that are either stored in a file on the computers hard drive or a database on the local network or internet.
+When the document is compiled either by calling `rmarkdown::render()` or by clicking the Knit-button in RStudio, the YAML front matter is parsed.
+Errors during this processing step are usually due to erroneous YAML syntax and start with  `Error in yaml::yaml.load(enc2utf8(string), ...) :`.
+Next, the R code inside the R Markdown document is executed sequentially from top to bottom of the document and the resulting output is inserted into the document in markdown syntax.
+Any figures that are generated during the execution of the R code are stored to the hard drive and embedded into the markdown document.
+The R code is executed in a new R session with an empty workspace, no attached packages, and with the working directory set to the path of the R Markdown file.
+If any portion of the R code throws an error the compilation is aborted.
+In RStudio the debugger will point to the first line of the R code chunk that threw the error---not the exact line responsible for the error---and report the error message.
+R error messages usually start with `Error:`, for example, `Error: Object 'experiment_data' not found.`
+
+
+(ref:compilation-process-diagram)
+Process diagram illustrating the compilation of reproducible reports written with `papaja`.
+Boxes represent input files, diamonds represent compiling software, and ovals represent output files.
+Dashed components are either implicit (components of R Markdown files) or by default deleted after the compilation and, thus, invisible to the user.
+
+```{r compilation-process-diagram, fig.cap = "(ref:compilation-process-diagram)", fig.align = "center", fig.height = 7, echo = FALSE}
+grViz("
+digraph software_process {
+  graph [rankdir = TB, fontname = Helvetica, ranksep = 0.8, overlap = FALSE]
+
+  node [shape = box, fontname = Helvetica]
+
+  # Input
+  node [margin = 0.2]
+
+  subgraph cluster_0 {
+    yaml [label = 'Metadata.yaml', style = 'dashed']
+    prose [label = 'Prose.md', style = 'dashed']
+    code [label = 'Code.R', style = 'dashed']
+
+    label = 'Manuscript.Rmd'
+  }
+
+  data [label = 'Data.csv']
+  references [label = 'References.bib']
+
+  # Output
+  node [shape = oval, style = dashed, margin = 0.1]
+  markdown [label = 'Manuscript.md']
+
+  node[style = solid]
+  figure [label = 'Figure.eps']
+  tex [label = 'Manuscript.tex']
+  pdf [label = 'Manuscript.pdf']
+  docx [label = 'Manuscript.docx']
+
+  # Software
+  node [shape = diamond]
+  r [label = 'R']
+  pandoc [label = 'pandoc']
+  latex [label = 'LaTeX']
+
+  # Transitions
+  edge [fontname = Helvetica, fontsize = 12, arrowhead = vee]
+
+  {code data} -> r
+  r -> r [label = 'papaja\nbookdown\n&nbsp;&nbsp;rmarkdown\nknitr']
+  r -> {markdown figure}
+  {yaml prose} -> markdown
+
+  {markdown figure references} -> pandoc
+  pandoc -> pandoc [label = 'papaja\n&nbsp;&nbsp;pandoc-citeproc']
+  pandoc -> tex -> latex -> pdf
+  pandoc -> docx
+  latex -> latex [label = '&nbsp;apa6']
+
+  {rank = same; pdf; docx}
+}
+") %>%
+  export_svg %>%
+  charToRaw %>%
+  rsvg_pdf("paper_files/figure-latex/compilation-process-diagram.pdf", width = 350)
+
+include_graphics("paper_files/figure-latex/compilation-process-diagram.pdf")
+```
+
+After the R code has been executed the `bookdown` document format `pdf_document2()` or `word_document2()`, respectively, provides functions that enable the cross-referencing syntax `\@ref()` described in the [Cross-referencing] section.
+Incorrect use of the cross-referencing syntax typically does not interfere with the document compilation but is apparent from missing or incorrect cross-references in the compiled document, e.g. instead of a figure number the document may contain the figure handle such as `(#fig:my-figure)`.
+The result of this processing step is a pure markdown document containing only a YAML header, prose in markdown (and optionally LaTeX) syntax and rendered images in PDF, EPS, PNG, and TIFF formats at 300 dpi as set by `apa6_pdf()` or `apa6_word()`, respectively.
+
+The markdown document, images and an optional BiB(La)TeX file that contains bibliographic information are the input to the next processing step.
+`rmarkdown::render()` assembles a system call to pandoc that is supplemented by `papaja` to include a call to an additional filter and can be further customized by the user.
+pandoc parses the contents of the markdown file and translates it into an abstract syntax tree (AST).
+The `pandoc-citeproc` filter is than applied to the AST to replace the citation markup by the citation text and insert a reference section.
+As detailed in the [Citations] section, `pandoc-citeproc` relies on the [citation styles language](http://citationstyles.org/) (CSL), an XML-based specification of citation and bibliography formatting rules.
+Unfortunately, CSL does not support in-text citations.
+To overcome this limitation, `pandoc-citeproc` provides a separate syntax for in-text citations, which is based on the same CSL style.
+As a result the CSL APA6 style uses ampersands for all citations, including in-text citations, defying the APA citation style.
+That is why `papaja` provides an additional R-based filter that is applied to the AST to replace ampersands in in-text citations with the word *and*.
+
+After all filters have been applied to the AST pandoc converts the document into the target output format, that is, PDF or DOCX.
+To create DOCX-documents `papaja` provides a reference DOCX-file containing page setup and style definitions that pandoc uses to create the manuscript file.
+That is, pandoc translates the AST directly to the office open XML format.
+To create PDF-documents pandoc in turn relies on LaTeX, that is, pandoc translates the AST to a TeX-file based on a template provided by `papaja`.
+This template invokes the `apa6` LaTeX document class [@???] and loads several additional LaTeX packages.
+pandoc then generates a system call to LaTeX to render the PDF document.
+During this processing step, that is, following the pandoc system calls, errors are due to failures of LaTeX to compile the TeX-file and usually start with `!`, for example, `! Undefined control sequence.` or `! Missing $ inserted`.
+
+- YAML front matter is read
+    - `Error in yaml::yaml.load(enc2utf8(string), ...) :`
+- R code is executed
+    - `Error: Object 'experiment_data' not found.`
+    - Gives first line of erroneous R code chunk
+- `bookdown` adds cross- and text-references
+    - No error messages; look for `(#fig:chunk-name)` in text
+    - Don't use `_` in chunk names!
+- `pandoc` and `pandoc-citeproc` convert Markdown
+    - `Error: pandoc document conversion failed with error 1`
+    - `pandoc-citeproc: Cannot decode byte '\xfc'`
+    - `pandoc-citeproc: reference XYZ not found`,<br />shows up as **???** in text
+- LaTeX creates a PDF
+    - `! Missing $ inserted`
+
+
+### Software requirements
+
+To use `papaja` you need to make sure the following software is installed on your computer:
+
+@. **[R](http://www.r-project.org/) 2.11.1 or later**
+@. **[pandoc](http://johnmacfarlane.net/pandoc/) 1.19 or later**; if you work with [RStudio](http://www.rstudio.com/) (1.1.453 or later) pandoc should already be installed, otherwise install pandoc using the [instructions for your operating system](https://github.com/rstudio/rmarkdown/blob/master/PANDOC.md)
+
+If you want to create PDF- in addition to DOCX-files you need
+
+@. **[TeX](http://de.wikipedia.org/wiki/TeX) 2013 or later**. Try [MikTeX](http://miktex.org/) for Windows, [MacTeX](https://tug.org/mactex/) for Mac, or [TeX Live](http://www.tug.org/texlive/) for Linux.
+
+`papaja` requires LaTeX packages that are not part of the basic TeX installations.
+
+```{r latex-packages, echo = FALSE}
+latex_packages <- c("apa6", "etoolbox", "booktabs", "threeparttable", "caption", "fancyhdr", "endfloat", "upquote", "microtype", "threeparttablex", "environ", "trimspaces", "url", "csquotes", "was", "lineno", "pgf", "ms", "xcolor", "mptopdf", "txfonts", "sttools", "fancyvrb", "framed", "parskip")
+latex_packages <- latex_packages[order(latex_packages)]
+```
+
+
+# Document structure
+
+## Body
+
+The body of R Markdown documents consists of prose written in Markdown interspersed with R code.
+
+### Markdown
+
+A general principle in typesetting is to separate content and style.
+Separation is commonly achieved through the use of a markup language, which is a system of document annotations.
+These annotations declare portions of text as, for example, title, section headings, or list items but, crucially, they are agnostic to what this means visually (e.g., `**text**` instead of **text**).
+Separation of content and style is useful because it enables swift changes to an entire documents' style or structure and facilitates applying a common style across multiple documents.
+Microsoft Word implements this strategy in their so-called *styles*, which are collections of formatting instructions that can be assigned to portions of the text.
+
+`papaja` uses the [Markdown](http://en.wikipedia.org/wiki/Markdown) syntax to separate content and style.
+Markdown was desigend to be an easy-to-read and -write formatting syntax.
+The key design goal was to create a syntax that is readable as-is.
+The following is an excerpt from the APA example manuscript written in Markdown.
+
+```{markdown}
+# Methods
+## Participants
+Younger adults (14 women, 10 men, $M_{age} = 19.5$ years, age
+range: 18–22 years) were recruited with flyers posted on the
+Boston College campus. <!–– TODO: Add flyer to appendix! ––>
+
+Older adults (15 women, nine men, $M_{age} = 76.1$ years, age
+range: 68–84 years) were recruited through the Harvard
+Cooperative on Aging (see Table 1, for demographics and test
+scores).[^p]
+
+[^p]: Analyses of covariance were conducted with these
+covariates,with no resulting influences of these variables on
+the pattern or magnitude of the results.
+```
+
+Without any prior knowledge of Markdown it should be easy to guess what most of this syntax does:
+`#` and `##` denote first and second order section headings (and so on), `<!--` and `-->` surround comments that will not be displayed in the rendered document, and `[^p]` adds a reference to a footnote that is written out following `[^p]:`.
+The equations surrounded by `$` may be somewhat less intuitive.
+In R Markdown, equations are written in LaTeX's powerful [mathematics syntax](https://en.wikibooks.org/wiki/LaTeX/Mathematics) (also see [Equations]).
+For an overview of the Markdown syntax see [Markdown text formatting].
+
+
+### R code
+
+There are two ways to include R code in R Markdown documents.
+The primary method is to use so-called *code chunks*.
+
+    `r ''````{r, code-chunk, echo = FALSE}
+    age_mean <- mean(demographics$age)
+    ```
+
+Code chunks are surrounded by ` `r ''```` ` and should be preceeded and followed by an empty line.
+The behavior of code chunks can be controlled by passing comma-separated options surrounded by braces to the chunk.
+The first option is compulsory and specifies what langauge the code chunk contains and usually be `r`, but other languages, such as `python`, `stan`, or `SQL` are supported.
+[RStudio's knitr language engines documentation](http://rmarkdown.rstudio.com/authoring_knitr_engines.html) provides an overview of all supported languages.
+
+The second option of a code chunk is its label or name, here `code-chunk`.
+It is good practice to provide a meaningful name for each chunk because chunk names
+
+1. briefly describe the following codes purpose and, hence, are a means of structuring and documenting the code
+2. serve as meaningful names for graphic files that the chunks produce
+3. are required to control when the code of a cached chunk has to be rerun because a preceeding chunk has changed (see [Caching expensive computations]).
+
+By default, `papaja` sets the chunk options `echo = FALSE` and `message = FALSE` for all chunks.
+`echo = FALSE` means that the code chunk is run but hides the code and `message = FALSE` hides any messages generated by the code so that they are not included in the manuscript.
+Both settings can be overwritten if desired.
+See the [knitr chunk options and package options](https://yihui.name/knitr/options/) for a overview of available settings.
+
+R code can also be inserted into in a line of text, for example `` ``r ''`r mean(demographics$age)` ``.
+Writing R code inline is a convenient way of reporting results of computations in the running text.
+For example, the mean and standard deviation of participants' age are stored in variables named `age_mean` and `age_sd`.
+These numbers can be reported by printing the variables in inline R code.
+
+```{markdown}
+Participants mean age was `r age_mean` years ($SD = `r age_sd`$).
+```
+
+As in any other R script, R code is executed from top to bottom.
+Thus, any variables that are called in code chunks or inline R code must be defined above.
+
+Reporting numerical values frequently requires some formatting, such as rounding or filling with trailing zeros (e.g., 24.10).
+In the section [Numerical values], we provide an overview of `papaja` functions that can be used to easily format simple numbers or results from statistical analyses according to APA guidelines.
+
+
+## Citations
+
+If you are not already using a reference manager, such as Zotero, I strongly suggest you start doing so.
+Reference managers are like iTunes for your literature; they help you search, download, and organize papers. Most importantly, with a few clicks you can export a collection of references you need for a paper into a `.bib`-file.
+
+By default, citations in R Markdown are formatted by `pandoc-citeproc`, a filter that `pandoc` applies as it renders the final document.
+The advantage of using `pandoc-citeproc` is that it works equally well for both PDF and Microsoft Word documents.
+To start citing, supply a Bib(La)TeX (or for example EndNote, RIS, Medline) file to the `bibliography` parameter in the YAML front matter (`bibliography: my.bib`).
+Once the R Markdown file knows where to look for reference `[@james_1890]` will create a citation within parentheses [@james_1890].
+Multiple citations must be separated by `;` (e.g., `[@james_1890; @bem_2011]`) and are ordered alphabetically as per APA style [@james_1890; @bem_2011].
+To cite a source in text simply omit the brackets; for example, write `@james_1890` to cite @james_1890.
+
+| Citation type | Syntax | Rendered citation |
+|:--------------|:-------|:------------------|
+| Citation within parentheses | `[@james_1890]` | (James, 1890) |
+| Multiple citations | `[@james_1890; @bem_2011]` | (Bem, 2011; James, 1890) |
+| In-text citations | `@james_1890` | James (1890) |
+| Year only | `[-@bem_2011]` | (2011) |
+
+Additional information can be added to citations as pre- or postfixes.
+Pre- and postfixes can simply be added to each citation by writing inside the brackets (`[e.g., @bem_2011]`).
+Note that pre- and postfixes are bound to the enclosed citation, not to the set of all citations.
+Hence, a prefix will be reorder together with its citation, which may be undesirable.
+For example, `[e.g., @james_1890; @bem_2011]` yields [e.g., @james_1890; @bem_2011].
+There is no way to prevent this behavior, so mind the alphabetical order of citations.
+
+### Conveniently inserting citations with `citr`
+
+`citr` is an R package that provides functions to search Bib(La)TeX-files to create and insert formatted Markdown citations into the current document.
+If you use RStudio, the package supplies an easy-to-use [RStudio add-in](https://rstudio.github.io/rstudioaddins/) that facilitates inserting citations.
+The references for the inserted citations are automatically added to the documents reference section.
+
+Once `citr` is installed (`install.packages("citr")`) and you have restarted your R session, the addin appears in the menus and you can define a [keyboard shortcut](https://rstudio.github.io/rstudioaddins/#keyboard-shorcuts) to call the addin (we suggest <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd>).
+
+The addin will automatically look up the Bib(La)TeX-file(s) specified in the YAML front matter.
+If the document does not contain a YAML front matter the addin will attempt to locate a parent document and look up the Bib(La)TeX-file specified therein.
+That is, the addin works its automagic even if you edit R Markdown documents that are included in another R Markdown document (see [Splitting an R Markdown document]).
+The expected names of a parent document default to `c("index.Rmd", "master.Rmd")`, but those can be customized (e.g., `options(citr.parent_documents = "my_parent.Rmd")`).
+
+`citr` can also be used without RStudio, albeit it is less convenient.
+The following call searches a Bib(La)TeX-file and creates formatted Markdown citations for the results.
+
+
+
+### Referencing R and its packages
+
+A lot of R packages are developed by academics free of charge.
+As citations are the currency of science, it's easy to compensate volunteers for their work by citing the R packages we use.
+Howerver, citing software is rarely done arguebly because it is tedious work.
+`papaja` therefore supplies two functions that make citing R and its packages easy.
+
+```{r echo = TRUE}
+r_refs(file = "r-references.bib")
+my_citations <- cite_r(file = "r-references.bib")
+```
+
+`r_refs()` creates a BibTeX file containing citations for R and packages that are in use at the time the function is executed.
+`cite_r()` takes these citations and turns them into readily reportable text.
+`my_citations` now contains the following text that you can use in your document: 
+
+> `r my_citations`
+
+If you prefer to cite only a subset of these packages, package names can be specified either as a blacklist, so they won't be cited (`withhold = TRUE`), or as a whitelist, so only these packages will be cited (`withhold = FALSE`).
+
+```{r echo = TRUE}
+my_citations <- cite_r(
+  file = "r-references.bib"
+  , pkgs = c("afex", "lsmeans", "papaja")
+  , withhold = FALSE
+)
+```
+
+> `r my_citations`
+
+Another option is to cite R in text but move the list of R packges into a footnote.
+
+```{r echo = TRUE}
+my_citations <- cite_r(file = "r-references.bib", footnote = TRUE)
+```
+
+This way you can reference R in the running text using `my_citations$r` and place the footnote syntax including the package list `my_citations$pkgs` in a new paragraph.
+
+> `r my_citations$r`
+
+`r my_citations$pkgs`
+
+
+
+## Equations
+
+If you need to report formulas, you can use the flexible LaTeX syntax (it will work in Word documents, too).
+Inline math must be enclosed in `$` or `\(` and `\)` and the result will look like this: $d' = z(\mathrm{H}) - z(\mathrm{FA})$.
+For larger formulas displayed equations are more appropriate; they are enclosed in `$$` or `\[`and `\]`,
+
+$$
+d' = \frac{\mu_{old} - \mu_{new}}{\sqrt{0.5(\sigma^2_{old} + \sigma^2_{new})}}.
+$$
+
+## Cross-referencing
+
+`papaja` builds on the document formats `pdf_document2()` and `word_document2()` from the `bookdown` package.
+This enables the use of `bookdown` cross-referencing syntax including automatically generated table and figure labels as detailed in the [bookdown documentation](https://bookdown.org/yihui/bookdown/cross-references.html).
+
+To cross-reference figures and tables use `\@ref(fig:chunk-label)` or<br /> `\@ref(tab:chunk-label)`
+
+- Only works if chunk labels don't contain `_`
+- Precede by non-breaking spaces, e.g.<br />`Figure\ \@ref(fig:chunk-label)`
+
+## Appendices
+
+Appendices should be in a separate file<br />(e.g., `appendix.Rmd`)
+
+- One level-1 heading
+- No YAML front matter
+
+```{yaml}
+---
+appendix: "appendix.Rmd"
+---
+```
+
+
+# Reporting
+
+Using `papaja`, it is possible to run all your analyses from within an R Markdown document.
+Any output from R is included as you usually would using R Markdown.
+By default the R code will not be displayed in the final documents.
+If you wish to show off your code you need to set `echo = TRUE` in the chunk options.
+
+This section describes how you can include the results of your analyses can be included in text.
+It starts with simple numerical values (like a sample mean) and then continues with more-complex
+output, like figures, tables, and the results from statistical models and hypothesis tests.
+
+
+## Numerical values
+
+```{r printnum-values, echo = FALSE}
+age_mean <- 22.8395
+age_sd <- 3.7846237542894
+```
+
+Consider a basic example, where you want to include a mean and a standard deviation into text:
+`printnum()` can be used to include numeric values in the text.
+The function performs the rounding and optionally omits leading zeros in accordance with APA guidelines:
+
+```{r inline-printnum, eval = FALSE, highlight = FALSE}
+Participants mean age was `r printnum(age_mean)` years ($SD = `r printnum(age_sd)`$).
+```
+
+The above line is rendered as follows:
+
+> Participants mean age was `r printnum(age_mean)` years ($SD = `r printnum(age_sd)`$).
+
+`printnum()` is quiet flexible and passes its arguments to the underlying base function `formatC()` 
+(CAVE: We are currently considering to switch to `format()`.),
+so changing the number of digits after the decimal point or the character to be used to indicate the 
+decimal point (e.g., from a point `"."` to a comma `","`) is always possible.
+
+```{block2, hook-note, type = "rmdnote"}
+`papaja` automatically applies `printnum()` to any numbers that a printed in inline code chunks.
+Hence, `` `r age_mean` `` and `` `r printnum(age_mean)` `` are effectively identical and both yield "22.84".
+```
+
+`papaja` additionally provides a shorthand version of `printnum()`, namely `printp()`, with defaults for correct typesetting of $p$ values (e.g., $p < .001$ instead of $p = 0.000$).
+
+Typeset numerical values for greater control
+- `printnum()`
+- `printp()` as shorthand for *p* values
+
+```{r}
+printnum(c(143234.34557, Inf))
+```
+
+```{r}
+printnum(42L, numerals = FALSE, capitalize = TRUE)
+```
+
+```{r}
+printp(c(1, 0.0008, 0))
+```
+
+
+
+## Figures
+
+As in any R Markdown document, you can include figures in your document.
+Figures can either consist of plots generated in R or external files.
+In accordance with APA guidelines, figures are not displayed in place but are deferred to the final pages of the document.
+To change this default behavior set the option `figsintext` in the [YAML front matter] to `yes`.
+
+
+### R-generated figures
+
+Any plot that is generated by an R code chunk is automatically included in your document.
+Hence, a simple call to `plot()` is sufficient to create a figure:
+
+(ref:simple-base-plot)
+A basic scatterplot of the `cars` dataset.
+
+```{r simple-base-plot, fig.cap = "(ref:simple-base-plot)"}
+plot(cars)
+```
+
+Figure display size, resolution, file format and many other things can be controlled by setting the corresponding chunk options.
+Refer to the [plot-related `knitr` chunk options](https://yihui.name/knitr/options/#plots) for an overview of all options.
+In `papaja`-documents, by default, all figures as saved as vectorized PDF and pixel-based PNG files at a resolution of 300 DPI, which should in most cases be sufficient for print publication.
+When the target document format is PDF the vectorized PDF files are included; when the target document format is DOCX the pixel-based PNG files are included.
+The files can be found in the `mydocument_files` folder that is generated when `mydocument.Rmd` is knitted.
+
+Note, if you define transparent colors in your plots (e.g., when you defining colors using `rgb()`), the rendered document will always display the pixel-based PNG files, regardless of the target document format.
+Given the lossless compression in PNG and the decent resolution of 300 DPI this should not be a problem in print.
+
+
+#### `papaja` plot functions
+
+Factorial designs are ubiquotous in experimental psychology but notoriously cumbersome to visualize with R base `graphics`.
+That is why `papaja` provides a set of functions to facilitate plotting data from factorial designs.
+
+The functions `apa_beeplot()`, `apa_lineplot()`, `apa_barplot()`, and the generic `apa_factorial_plot()` are intended to provide a convenient way to obtain a publication-ready figure while maintaining enough flexibility for customization.
+The basic arguments to these functions are all the same, so you only need to learn one syntax to generate different types of plots.
+Moreover, it is easy switch between the different types of plots by changing the name of the called function.
+
+Consider the following example of a so-called beeswarm plot:
+
+```{r echo = FALSE}
+load("data/mixed_data.rdata")
+```
+
+(ref:beeswarm-caption)
+An example beeswarm plot.
+Small points represent individual observations, large points represent condition means, and error bars represent 95% confidence intervals.
+
+```{r beeswarm2, fig.cap = "(ref:beeswarm-caption)", echo = TRUE, dev.args = list(bg = 'white')}
+apa_beeplot(
+  data = mixed_data
+  , id = "Subject"
+  , dv = "Recall"
+  , factors = c("Task", "Valence", "Dosage")
+)
+```
+
+A `data.frame` that contains the data in long format is passed to the `data` argument.
+The other arguments expect the names of the columns that contain the subject identifier `id`,
+the dependent variable `dv`, and the between- or within-subjects `factors` of the design.
+Currently, zero to four factors are supported.
+
+For each cell of the design, the functions plot
+
+1. central tendency,
+2. dispersion, and
+3. names of dependent variable, factors and levels, and optionally a legend.
+
+Mesures of central tendency and dispersion default to the mean and 95% confidence intervals.
+However, the arguments `tendency` and `dispersion` can be used to overwrite these defaults and plot other statistics.
+For example, to plot within-subject rather than between-subject confidence intervals you can set `dispersion = within_subjects_conf_int`.
+If the data encompass multiple observations per participant-factor-level-combination, these observations are aggregated.
+By default, the condition means are computed but you can specify other aggregation functions via the `fun_aggregate` argument.
+
+The visual elements of the plots can be customized by passing options to the arguments `args_points`, `args_error_bars`, `args_legend`, and so on.
+These arugments take named lists of arguments that are passed on to the respective `graphics` functions, such as `points()`, `arrows()`, and `legend()`.
+Consider the following code and the resulting Figure\ \@ref(fig:customized-plot) for a customized version of the previous beeswarm plot.
+
+
+(ref:customized-plot-caption)
+A customized beeswarm plot.
+Note that, by default, the swarm inherits parameters from the args_points argument.
+Small points represent individual observations, large points represent means, and error bars represent 95% within-subjects confidence intervals.
+
+```{r customized-plot, fig.cap = "(ref:customized-plot-caption)"}
+apa_beeplot(
+    data = mixed_data
+  , id = "Subject"
+  , dv = "Recall"
+  , factors = c("Task", "Valence", "Dosage")
+  , dispersion = within_subjects_conf_int
+  , main = c(expression(italic(A)~"dosage"), expression(italic(B)~"dosage"), expression(italic(C)~"dosage"))
+  , ylab = "Number of correctly recalled words"
+  , args_points = list(cex = 2, bg = c("skyblue4", "indianred3", "seagreen4"), col = "white")
+  , args_swarm = list(cex = 1.2)
+  , args_error_bars = list(length = 0.02, col = "grey20")
+  , args_legend = list(x = "bottom", inset = 0.05)
+  , args_y_axis = list(las = 1)
+)
+```
+
+
+- Utilize variable labels
+
+These plot functions also utilize variable labels, with some LaTeX math support (see `?latex2exp::TeX`)
+
+```{r labelled-beeplot, eval = FALSE}
+variable_labels(cosmetic_surgery) <- c(
+  Post_QoL = "Quality of life post surgery ($\\bar{x}_{post}$)"
+)
+
+apa_beeplot(
+  id = "ID"
+  , dv = "Post_QoL"
+  , factors = c("Reason", "Surgery", "Gender")
+  , data = cosmetic_surgery
+  # , ylab = "Quality of life post surgery"
+  , las = 1
+  , args_legend = list(x = 0.25, y = 30)
+  , args_points = list(bg = c("skyblue2", "indianred1"))
+  , args_error_bars = list(length = 0.03)
+)
+```
+
+Custom themes can be set as default as usual and are subsequently applied to all plots created with `ggplot()`.
+`papaja` provides a template `theme_apa()` that we feel is well suited to create publication-ready plots.
+The following example demonstrates how to set a default theme.
+
+```{r ggplot}
+# Cosmetic surgery dataset from
+# Field, A. P., Miles, J., & Field, Z. (2012). Discovering statistics using R. London: Sage.
+load("data/cosmetic_surgery.rdata")
+
+ggplot(
+    cosmetic_surgery
+    , aes(x = Base_QoL, y = Post_QoL, color = Reason)
+  ) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(
+    x = "Baseline quality of life"
+    , y = "Quality of life post surgery"
+  ) +
+  scale_color_brewer(palette = "Set1") +
+  theme_apa(box = TRUE) +
+  theme(legend.position = c(0.2, 0.8))
+```
+
+
+## Tables
+
+For prettier tables, I suggest you try `apa_table()`, which builds on `knitr`'s `kable()`.
+
+(ref:mixed-table-caption)
+Descriptive statistics of correct recall by dosage.
+
+(ref:mixed-table-note)
+This table was created with `apa_table()`.
+
+```{r results = 'asis', echo = TRUE, eval = FALSE}
+descriptives <- mixed_data %>% group_by(Dosage) %>%
+  summarize(
+    Mean = mean(Recall)
+    , Median = median(Recall)
+    , SD = sd(Recall)
+    , Min = min(Recall)
+    , Max = max(Recall)
+  )
+descriptives[, -1] <- printnum(descriptives[, -1])
+
+apa_table(
+  descriptives
+  , caption = "(ref:mixed-table-caption)"
+  , note = "(ref:mixed-table-note)"
+  , escape = TRUE
+)
+```
+
+Of course popular packages like `xtable`[^xtable] or `tables` can also be used to create tables when knitting PDF documents.
+These packages, however, cannot be used when you want to create Microsoft Word documents because they rely on LaTeX for typesetting.
+`apa_table()` creates tables that conform to APA guidelines and are correctly rendered in PDF and Word documents.
+But don't get too excited.
+In papaja, table formatting is somewhat limited for Word documents due to missing functionality in pandoc (e.g., it is not possible to have cells or headers span across multiple columns).
+
+[^xtable]: When you use `xtable()`, table captions are [set to the left page margin](http://tex.stackexchange.com/questions/42209/centering-tables-in-document-class-apa6).
+
+As required by the APA guidelines, tables are deferred to the final pages of the manuscript when creating a PDF.
+To place tables and figures in your text instead, set the `figsintext` parameter in the YAML header to `yes` or `true`, as I have done in this document.
+Again, this is not the case in Word documents due to limited pandoc functionality.
+The bottom line is, Word documents will be less polished than PDF.
+The resulting documents should suffice to enable collaboration with Wordy colleagues and prepare a journal submission with limited manual labor.
+
+
+```{r results = "asis", include = FALSE, eval = FALSE}
+employee <- c("$\\alpha$",'$\\alpha$','$\\alpha$')
+salary       <- c(21000, 23400, 26800)
+startdate   <- as.Date(c('2010-11-1','2008-3-25','2007-3-14'))
+dt              <- data.frame(employee, salary, startdate)
+
+apa_table(
+  dt
+  , caption = "Descriptive statistics of correct recall by dosage."
+  , note      = "This table was created with apa\\_table() and here's
+some latex $\\alpha$"
+  , escape = FALSE
+  , format   = "latex"
+)
+```
+
+
+## Results from statistical tests
+
+Output from statistical models and tests needs to be properly formatted before it
+can be included in text.
+For this purpose, we created the function `apa_print()`.
+Simply drop the results from a statistical test (e.g. a $t$ test or an ANOVA)
+into `apa_print()`, and you will get an output object (a `list`) that contains all you need
+to report the analysis according to APA guidelines.
+`apa_print()` currently supports output objects from a variety of statistical models/tests,
+including $t$ tests, ANOVA, linear regression.
+For a full list of supported output objects, see Table \@ref(tab:supported-s3-methods).
+
+
+```{r supported-s3-methods, echo = FALSE, results = "asis"}
+print_classes <- gsub("apa_print\\.", "", as.character(utils::methods("apa_print")))
+print_classes <- print_classes[!grepl(",", print_classes)]
+print_classes <- c(print_classes, rep(NA,  (4 - length(print_classes) %% 4) * (length(print_classes) %% 4 > 0)))
+print_classes <- matrix(print_classes, ncol = 4)
+colnames(print_classes) <- apply(print_classes, 2, function(x) {
+  first_letters <- tolower(substr(x, 1, 1))
+  first_letters <- c(first_letters[1], tail(first_letters, 1))
+  first_letters[is.na(first_letters)] <- "z"
+  col_names <- if(first_letters[1] == first_letters[2]) first_letters[1] else paste(first_letters, collapse = "-")
+  toupper(col_names)
+})
+print_classes[is.na(print_classes)] <- ""
+print_classes[grepl("lsm|emm|glht|ref\\.grid|BayesFactor", print_classes)] <- paste0(print_classes[grepl("lsm|emm|glht|ref\\.grid|BayesFactor", print_classes)], "<sup>*</sup>")
+knitr::kable(print_classes, format = "html", escape = FALSE)
+```
+
+<span style="font-size:50%;"><sup>\*</sup> Not fully tested, don't trust blindly!</span>
+
+
+(ref:formating-process-diagram)
+Process diagram illustrating the use of `apa_print()` methods and `apa_table()` to format results from statistical analyses according to APA guidelines.
+The formatted text and tables can be reported in a manuscript.
+
+```{r formatting-process-diagram, fig.cap = "(ref:formating-process-diagram)", fig.align = "center", echo = FALSE}
+grViz("
+digraph reporting_process {
+  graph [rankdir = TB, fontname = Helvetica, ranksep = 0.8, overlap = FALSE]
+
+  node [shape = box, fontname = Helvetica, margin = 0.2]
+
+  # Input
+  format [label = 'rmarkdown.pandoc.to']
+  table [label = '$table']
+
+  subgraph cluster_0 {
+    htest [label = 'htest']
+    lm [label = 'lm']
+    aov [label = 'aov\naovlist\nafex_aov\nAnova.mlm']
+    anova [label = 'anova']
+
+    style = rounded
+    label = 'Analysis results (S3-objects)'
+  }
+
+  # apa_print output
+  subgraph cluster_1 {
+    estimate [label = '$estimate']
+    statistic [label = '$statistic']
+    full [label = '$full_result']
+
+    style = rounded
+    label = 'Formatted text'
+    labelloc = 'b'
+  }
+
+  # Output
+  l_table [label = 'LaTeX table']
+  p_table [label = 'pandoc table']
+
+  # papaja functions
+  node [shape = diamond, margin = 0.1]
+  apa_print [label = 'apa_print.class()']
+  apa_table [label = 'apa_table()']
+
+  # Transitions
+  edge [fontname = Helvetica, fontsize = 15, arrowhead = vee]
+  {htest lm aov anova} -> apa_print -> {estimate statistic table}
+  {table format} -> apa_table -> {l_table p_table}
+}
+") %>%
+  export_svg %>%
+  charToRaw %>%
+  rsvg_pdf("paper_files/figure-latex/formatting-process-diagram.pdf", width = 400)
+
+include_graphics("paper_files/figure-latex/formatting-process-diagram.pdf")
+```
+
+
+### htest (*t* tests, correlations, etc.)
+
+The results of a $t$ test (regardless of the exact type of $t$ test) are typically stored in an `htest` object.
+
+```{r}
+# Cosmetic surgery dataset from
+# Field, A. P., Miles, J., & Field, Z. (2012). Discovering statistics using R. London: Sage.
+load("data/cosmetic_surgery.rdata")
+
+t_out <- t.test(
+  x = cosmetic_surgery$Post_QoL
+  , y = cosmetic_surgery$Base_QoL
+  , paired = TRUE
+)
+
+# Let's see what the apa_print() output looks like
+apa_print(t_out)
+```
+
+As you can see, `apa_print()` returns a list of four elements:
+List element `estimate` contains the sample estimate of mean difference;
+element `statistic` contains the result of the NHST with test statistic, *df*s, and *p* value;
+element `full_result` contains both information combined.
+The fourth element, `table`, contains a table containing test results; while this is `NULL` for a $t$ test,
+it will be quiet interesting for ANOVA or linear model results, as you will see in the next subsections.
+
+
+### lm (linear regression)
+
+The results of a linear model are stored in an `lm` object.
+
+```{r}
+lm_out <- lm(formula = Post_QoL ~ Base_QoL + BDI, data = cosmetic_surgery)
+apa_lm <- apa_print(lm_out)
+```
+
+Again, `apa_print` returns a four-elements list.
+`apa_lm$table` contains a complete regression table that can be passed to `apa_table()` to get a full regression table, see Table \@ref(tab:lm-table; remember to set the chunk option `results = "asis"`).
+
+```{r lm-table, results = "asis"}
+apa_table(
+  apa_lm$table
+  , caption = "A full regression table."
+  , escape = FALSE
+)
+```
+
+
+```{r}
+lm_res <- lm(Post_QoL ~ Base_QoL + BDI, data = cosmetic_surgery)
+lm_res_apa <- apa_print(lm_res, observed_predictors = TRUE)
+lm_res_apa$estimate$Intercept
+```
+
+> `r gsub("\\\\", "\\", lm_res_apa$estimate$Intercept)`
+
+--
+
+```{r}
+lm_res_apa$full_result$modelfit$r2
+```
+
+> `r gsub("\\\\", "\\", lm_res_apa$full_result$modelfit$r2)`
+
+Tables produced by `apa_print()` have variable labels
+
+```{r}
+lm_res_apa$table
+```
+
+
+```{r anova-apa, message = FALSE}
+cosmetic_surgery_anova <- afex::aov_ez(
+  data = cosmetic_surgery
+  , dv = "Post_QoL"
+  , id = "ID"
+  , between = c("Clinic", "Gender")
+)
+apa_anova <- apa_print(cosmetic_surgery_anova)
+```
+
+Now, you can report the results of your analyses like so:
+
+```{r eval = FALSE, echo = TRUE, eval = FALSE}
+Clinic (`r apa_anova$full$Clinic`) and patient gender affected post-surgery quality of life, `r apa_anova$full$Gender`. However, the effect of gender differed by clinic, `r apa_anova$full$Clinic_Gender`.
+```
+
+Which will yield the following text:
+
+> Clinic (`r apa_anova$full$Clinic`) and patient gender affected post-surgery quality of life, `r apa_anova$full$Gender`. However, the effect of gender differed by clinic, `r apa_anova$full$Clinic_Gender`.
+
+Again, you can easily create a complete ANOVA table by passing `recall_anova_results$table` to `apa_table()`, see \autoref{ref:anova}.
+
+```{r anova-table, results = 'asis'}
+apa_table(
+  apa_anova$table
+  , caption = "A really beautiful ANOVA table."
+  , note = "Note that the column names contain beautiful mathematical copy: This is because the table has variable labels."
+)
+```
+
+
+
+#### glht, lsmeans, ref.grid (post-hoc tests)
+
+...
+
+
+
+# Limitations
+
+As outlined in [Document compilation], `papaja` builds on `pandoc` to render Markdown into PDF and DOCX documents.
+Markdown provides good common basis for these and other document types but the common basis necessarily limits the degree of control that can be exerted over the rendered document.
+For example, there is currently no way to generate tables with `pandoc` in which cells span multiple rows or columns.
+Similarly, it is not possible to insert page breaks into a document.
+Both of these limitations have been raised with the developers of `pandoc` (see [here](https://github.com/jgm/pandoc/issues/1024) and [here](https://github.com/jgm/pandoc/issues/1934)), but it may take a while for them to be addressed.
+
+
+## PDF documents
+
+`pandoc` builds on LaTeX to render PDF documents.
+As discussed in [Markdown text formatting], when the R Markdown document contains LaTeX code it is kept as-is and can be used to exert greater control over the final result.
+For example, to create a page break in the rendered document you can use the LaTeX command `\pagebreak`.
+Similarly, tables with column spanners can be created by using the corresponding LaTeX code.
+Hence, the limited control offered by `pandoc` can be compensated by using LaTeX code and `papaja` resorts to this approach, for example, in `apa_table()`.
+
+### Customizing the document preamble
+
+You can exert further control over your PDF documents by customizing the LaTeX preamble.
+Consider the following example:
+By default, LaTeX arranges paragraphs and section headings so that they fill the page.
+This can sometimes lead to unwanted vertical spacing.
+
+If you prefer white space at the bottom of the page, rather than between paragraphs, you can overwrite this default behavior by including `\raggedbottom` in the document preamble.
+To do so, add the following to the YAML front matter of your document:
+
+~~~yaml
+header-includes:
+  - \raggedbottom
+~~~
+
+
+## Microsoft Word documents
+
+In contrast, there is no simple way to compensate for the limited control offered by `pandoc` when rendering Microsoft Word documents.
+This is the reason why some of `papaja`'s features are only available if the to-be-rendered document is in PDF format, such as some [Rendering options] and some features of `apa_table()` (see [Tables]).
+More over, rendered documents in DOCX format require some manual work before they fully comply with APA guidelines.
+We, therefore, provide the following checklist of necessary changes:
+
+Always,
+
+1. add a header line with running head and page number
+
+If necessary,
+
+2. position author note at the bottom of page 1
+3. move figures and tables to the end of the manuscript
+4. add colon to level 3-headings
+5. in figure captions,
+    - add a colon following the figure numbers and italicize<br />(e.g. "_Figure 1_. This is a caption.")
+6. in tables,
+    - add horizontal rules above the first and below the last row
+    - add midrules
+
+We hope to automated some of these points in the future as the flexibility of `pandoc` increases.
+
+
+
+
+# Help
+
+- Official documentation: https://crsh.github.io/papaja_man
+- Manuscripts with publicly available R Markdown source files.
+
+```{r}
+load_betterbiblatex_bib <- function(
+  encoding
+  , betterbiblatex_format = "bibtex"
+  , betterbiblatex_library = NULL
+) {
+  if(!"citr" %in% installed.packages()) stop("Please install the 'citr' package.")
+
+  bib <- c()
+  bbt_libraries <- citr:::query_bbt_libraries()
+
+  if(is.null(bbt_libraries)) {
+    betterbibtex_url <- paste0(
+      "http://localhost:23119/better-bibtex/library?library."
+      , betterbiblatex_format
+    )
+
+    bib <- citr::import_bbt(bib, betterbibtex_url, encoding)
+  } else {
+    betterbibtex_baseurl <- "http://localhost:23119/better-bibtex/library?/"
+    bbt_libraries <- bbt_libraries[
+      unlist(bbt_libraries[, "name"] %in% betterbiblatex_library)
+      ,
+      , drop = FALSE
+      ]
+    group_library_id <- unlist(bbt_libraries[, "id"])
+
+    for(bib_i in group_library_id) {
+      betterbibtex_url_i <- paste0(
+        betterbibtex_baseurl
+        , bib_i
+        , "/library."
+        , betterbiblatex_format
+      )
+
+      group_library_name_i <- unlist(bbt_libraries[unlist(bbt_libraries[, "id"]) == bib_i, "name"])
+
+      bib <- citr:::import_bbt(bib, betterbibtex_url_i, encoding)
+    }
+  }
+
+  class(bib) <- c("BibEntry", "bibentry")
+  bib
+}
+
+
+RefManageR::BibOptions(check.entries = FALSE)
+meta_bib <- load_betterbiblatex_bib(
+  "UTF-8" # Encoding of to-be-read Better BibLaTeX export
+  , betterbiblatex_format = "bibtex" # To-be-exported bibliography format
+  , betterbiblatex_library = "papaja" # Name of the library to load
+)
+
+length(meta_bib)
+```
+
+
+\newpage
+
+# References
+```{r create_r-references}
+r_refs(file = "r-references.bib")
+```
+
+\begingroup
+\setlength{\parindent}{-0.5in}
+\setlength{\leftskip}{0.5in}
+
+<div id = "refs"></div>
+\endgroup
