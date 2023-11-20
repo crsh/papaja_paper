@@ -92,75 +92,93 @@ library("afex")
 # knitr::dep_auto()
 ```
 
+---
 
-The dominant approach to writing scientific reports in psychology is the use of common word processors such as Microsoft Word or Libre Office.
-To implement the commonly requested APA manuscript style[^apa-style], authors may use document templates set up page margins, line spacing, fonts, and related aspects of the manuscript.
-The format of citations and references can be automated by using references managers that integrate with the word processor.
+> a scientific publication is **not** the scholarship itself, it is merely **advertising** of the scholarship. The actual scholarship is the complete software development environment and the complete set of instructions which generated the figures [p. 59, @buckheit_wavelab_1995].
+
+---
+
+The dominant approach to writing scientific reports in psychology is by using common word processors such as Microsoft Word or Libre Office.
+To implement the commonly requested APA manuscript style[^apa-style], authors may use document templates to automate parts of the formatting, such as page margins, line and paragraph spacing, or fonts.
+Formatting of citations and references can be delegated to references managers that integrate with the word processor.
 These forms of automation facilitate the implementation of APA style and reduce the likelihood of formatting errors.
-In contrast to manuscript styling, reporting of results is typically not automated.
-Results of analyses are copied from the output of the analysis software and pasted into the word processor.
-We will, therefore, refer to this as _copy-and-paste reporting_.
-Error-free reporting of results is arguably more important for a cummulative science than the manuscript style.
-Nonetheless, copy-and-paste reporting employs fault-preventing autmation only to ensure correct manuscript styling but not to ensure correct reporting or results.
+In contrast, results of analyses are typically reported manually.
+They are copied from the output of the analysis software and pasted into the word processor.
+We will, therefore, refer to this reporting approach as _copy-and-paste reporting_.
+Although incorrectly reported results potentially obstruct cummulative science, widespread copy-and-paste reporting employs fault-preventing autmation only to ensure correct manuscript styling but not to ensure correct reporting or results.
 
 [^apa-style]: APA style is one of the major style regimes in academia concerned with written scientific communication and is defined in the _Publication Manual of the American Psychological Association_ [APA; @american_psychological_association_publication_2010].
 Research in psychology and many fields other, including other social sciences, medicine, and public health is reported in APA style.
 
-Recent research has demonstrated empirically that, given the original data, results in scientific reports from a variety of disciplines are often difficult and sometimes impossible to reproduce [citations needed].
+As we will detail below, recent research has demonstrated empirically that, given the original data, results in scientific reports from a variety of disciplines are often difficult and sometimes impossible to reproduce [citations needed].
 This nonreproducability of results in peer-reviewed scientific journal articles indicates a serious problem with copy-and-paste reporting.
 In the following, we argue that dynamic documents are a less error-prone approach to authoring scientific reports:
-By fusing manuscript and analysis scripts dynamic documents help to ensure the computational reporducibility of reported results.
-We introduce the R package `papaja` that is designed to author APA-style manuscripts in R Markdown and facilitates the standardized reporting of analyses common in psychological research.
-
-# Computational reproducibility
-
-...
-
-Thus, the term reproducibility here means that given a dataset and analysis script any analyst obtains the same statistical results [@asendorpf_recommendations_2013; @cacioppo_social_2015].
-
-The importance of reproducibility was pinpointed by the U.S. National Science Foundation subcommittee on replicability in science:
-
-> Reproducibility is a minimum necessary condition for a finding to be believable and informative. [p. 4, @cacioppo_social_2015]
-
-> Good statistical practice is fundamentally based on transparent assumptions, reproducible results, and valid interpretations.
-
-> The ethical statistician [...] strives to promote transparency in design, execution, and reporting or presenting of all analyses
-
-> Makes documentation suitable for replicate analyses, metadata studies, and other research by qualified investigators.
-
-http://www.amstat.org/asa/files/pdfs/EthicalGuidelines.pdf
+By interleaving prose and analysis scripts dynamic documents help to ensure the computational reporducibility of reported results.
+We introduce the R package `papaja` that is designed to author APA-style dynamic manuscripts and facilitates the standardized reporting of analyses common in psychological research.
 
 
-"an article about a computational result is advertising, not scholarship. The actual scholarship is the full software environment, code and data, that produced the result."  - Buckheit & Donoho, 1995
+# Computational nonreproducibility
+
+<!-- ## Definition of compuational reproducibility -->
+
+Intersubjective verifiability is central principle of empirical science [@kim_philosophy_2010].
+When evaluating scientific claims it is therefore assumed that, given the same input, a computational or analytical procedure yields the same numerical result regardless of who performs the analysis or when it is performed.
+We refer to this basic assumption as computational reproducibility [see @plesser_reproducibility_2018 for a discussion of the terminalogies]
+Claims that rest on numerical results that are not computationally reproducible should be met with skepticism.
+Accordingly, the U.S. National Science Foundation subcommittee on replicability in science recently stressed that
+
+> [Computational] Reproducibility is a minimum necessary condition for a finding to be believable and informative [p. 4, @cacioppo_social_2015].
+
+Similarly, the ethical guidelines of the American Statistical Association note that
+
+> Good statistical practice is fundamentally based on transparent assumptions, reproducible results, and valid interpretations [p. 1, @american_statistical_association_ethical_2018].
+
+While it may seem innocuous to assume that results published in peer-reviewed journals are computationally reproducible, it is not.
+In scientific fields that rely heavily on compuational methods the ubiquity of errors has elicited discussions about a credibility crisis [@donoho_reproducible_2009].
+However, the analytical methods that are applied in psychological research are clearly much simpler than in the computational sciences.
+Is it alarmist to question the computational reproducibility of our results?
+Recent research provides empirical evidence that supports our skepticism.
 
 
-(Elsevier executable paper challenge: 10.1016/j.procs.2011.04.064)
-
-Donoho, D. L., Maleki, A., Rahman, I. U., Shahram, M. & Stodden, V. Reproducible
-research in computational harmonic analysis. Comput. Sci. Eng. 11, 8–18 (2009).
-Donoho and fellow researchers have been at the forefront of reproducibility for
-many years; this a
+## Prevalence of computational nonreproducibility
 
 
+>  The reanalyses by the
+original authors and our own reanalyses of the raw data
+revealed that several errors were caused by incorrect
+reporting of the test statistic or df. [p. 674, @bakker_misreporting_2011]
 
-1. Generalizability (e.g., Baribault et al., 2017; Brandt et al., 2014)
-2. Replicability (e.g., Open Science Collaboration, 2015; Simons, 2014)
-3. Analytical robustness (e.g., Silberzahn et al., 2017; Simonsohn, Simmons, & Nelson, 2015; Steegen, Tuerlinckx, Gelman, & Vanpaemel, 2016)
-4. Computational reproducibility (e.g., Peng, 2011; Rokem, Marwick, & Staneva, 2017; Stodden, 2015)
+> the rounding
+errors with a p value of .05 were all in favor of the
+researchers’ hypotheses
 
-<small>But see, for example, Plesser (2018)</small>
-
-
-U.S. National Science Foundation (NSF) subcommittee on replicability in science:
-
-> [Computational] Reproducibility is a .highlight[minimum necessary condition for a finding to be believable and informative]. (p. 4, Cacioppo, Kaplan, Krosnick, Olds, & Dean, 2015)
-
-&nbsp;
-
-> It is .highlight[scientifically and ethically imperative] that the results of statistical analysis […] be computationally reproducible (p. 138, Liu & Pounds, 2014)
+> Researchers should be aware that the use of copy–paste in
+statistical reporting is error prone.
 
 
-# Prevalence of computational nonreproducibility
+[@bakker_misreporting_2011; @nuijten_prevalence_2016]
+
+16,695 articles that reported NHST
+
+49.6 % of the articles with NHST
+results contained at least one inconsistency
+
+12.9 % (2,150) of the articles with NHST results contained at least one gross inconsistency.
+
+9.7 % (24,961) of the p-values were in-
+consistent, and 1.4 % (3,581) of the p-values were grossly
+inconsistent.
+
+largely stable over time
+
+
+1985 to 2013 from six flagship psychology journals
+
+two journals in general psychology
+
+articles with the subject "psychology" from the Public Library of Science
+
+
 
 <!-- statcheck estimates may be somewhat inaccurate (e.g., Schmidt, 2016) -->
 
@@ -168,10 +186,20 @@ U.S. National Science Foundation (NSF) subcommittee on replicability in science:
 <!-- - Sphericity corrections -->
 <!-- - Misinterpretation of reported statistics<br />(e.g., bootstrap $p$-values) -->
 <!-- - One-tailed test in "wrong" direction -->
+<!-- - Gross inconsistencies: Unclear what that means, given that p values could be correct but test statistics and df incorrect (but meta-analysis). -->
+
+
+
 <!-- - Misses some reported results (e.g., tables) -->
 <!-- - Many undetectable sources of errors -->
 
 <!-- *The problem may even be underestimated!* -->
+
+<!-- Errors in single-mediator models regression analyses (Petrocelli, Clarkson, Whitmire, & Moon, 2013) -->
+
+<!-- > More than 24% of the 156 models coded failed an equivalence test (i.e., $ab = c – c'$) -->
+
+
 
 <!-- Granularity-Related Inconsistency of Means<br />(GRIM, Brown & Heathers, 2016) -->
 
@@ -181,9 +209,8 @@ U.S. National Science Foundation (NSF) subcommittee on replicability in science:
 
 <!-- >  descriptives had been calculated using a Microsoft Excel formula that included an incorrect selection of cells; for example, this resulted in the .highlight[mean and SD of the first experimental condition being included as data points] in the calculation of the mean and SD (p. 4, Brown & Heathers, 2016) -->
 
-<!-- Errors in single-mediator models regression analyses (Petrocelli, Clarkson, Whitmire, & Moon, 2013) -->
 
-<!-- > More than 24% of the 156 models coded failed an equivalence test (i.e., $ab = c – c'$) -->
+## Compuational reproducibility is hard
 
 
 <!-- _Computational reproducibility is hard!_ -->
@@ -213,7 +240,7 @@ U.S. National Science Foundation (NSF) subcommittee on replicability in science:
 <!-- > _Psychological Science_ uses StatCheck […] on manuscripts that are sent out for extended review -->
 
 
-# Reproducible scientific reports
+# Dynamic documents
 
 Dynamic scientific reports fuse prose and simulation or analysis scripts [@R-knitr; @gandrud_reproducible_2013].
 Each time a dynamic document is compiled, the scripts are executed anew and the results---statistics, tables, and figures---are recreated and inserted into the document.
